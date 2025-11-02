@@ -11,9 +11,7 @@ API_KEY = os.getenv("ACTIONS_API_KEY")  # set this before running
 app = FastAPI(title="People Curation Actions API", version="1.0.0")
 
 # Add CORS middleware
-origins = [
-    "https://chat.openai.com",
-]
+origins = ["*"] # WARNING: Insecure, for debugging only
 
 app.add_middleware(
     CORSMiddleware,
