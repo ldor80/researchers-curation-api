@@ -2,12 +2,26 @@
 import os, csv, io, re, json, datetime
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse
 
 API_KEY = os.getenv("ACTIONS_API_KEY")  # set this before running
 
 app = FastAPI(title="People Curation Actions API", version="1.0.0")
+
+# Add CORS middleware
+origins = [
+    "https://chat.openai.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-Api-Key"],
+)
 
 HTTPS_RX = re.compile(r"https://[^\s\[\]\(\)\"]+")
 CTG_RX   = re.compile(r"(NCT\d{8})")
