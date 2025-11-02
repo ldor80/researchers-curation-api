@@ -230,8 +230,3 @@ def purify_url_action(req: PurifyRequest, x_api_key: Optional[str] = Header(None
 # Health
 @app.get("/healthz")
 def healthz(): return {"ok": True, "ts": datetime.datetime.utcnow().isoformat()}
-
-@app.get("/debug-key")
-def debug_key():
-    """Temporarily expose the server-side API_KEY to debug deployment issues."""
-    return {"server_api_key": API_KEY}
