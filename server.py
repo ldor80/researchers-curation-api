@@ -1,7 +1,7 @@
 # server.py
 import os, csv, io, re, json, datetime
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Request, Header, HTTPException
 from pydantic import BaseModel, Field
 from fastapi.responses import JSONResponse
 
@@ -181,9 +181,10 @@ def make_csv(obj: Dict[str, Any]) -> str:
         w.writerow([p.get("full_name",""), p.get("section",""), p.get("role",""), aff, country, pins, score, labels, ncts])
     return out.getvalue()
 
-def check_key(x_api_key: Optional[str]):
+def check_key(request: Request):
     if not API_KEY:
         return  # run open server if you really want (not recommended)
+    x_api_key = request.headers.get("x-api-key")
     if x_api_key != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -198,8 +199,8 @@ class EmitResponse(BaseModel):
     warnings: List[str] = []
 
 @app.post("/emit_people_json", response_model=EmitResponse, summary="Validate + preclean + return cleaned JSON/CSV")
-def emit_people_json(req: EmitRequest, x_api_key: Optional[str] = Header(None, convert_underscores=False)):
-    check_key(x_api_key)
+def emit_people_json(req: EmitRequest, request: Request):
+    check_key(request)
     # 1) preclean
     pre = preclean_people_obj(req.payload)
     # 2) validate
@@ -222,8 +223,8 @@ class PurifyResponse(BaseModel):
     ok: bool
 
 @app.post("/purify_url", response_model=PurifyResponse, summary="Purify a single URL (strip tracking/markdown, normalize)")
-def purify_url_action(req: PurifyRequest, x_api_key: Optional[str] = Header(None, convert_underscores=False)):
-    check_key(x_api_key)
+def purify_url_action(req: PurifyRequest, request: Request):
+    check_key(request)
     pu = purify_url(req.url)
     return {"purified_url": pu, "ok": bool(pu)}
 
@@ -231,12 +232,3 @@ def purify_url_action(req: PurifyRequest, x_api_key: Optional[str] = Header(None
 @app.get("/healthz")
 def healthz(): return {"ok": True, "ts": datetime.datetime.utcnow().isoformat()}
 
-@app.get("/debug-key")
-def debug_key():
-    """Temporarily expose the server-side API_KEY to debug deployment issues."""
-    key = API_KEY or ""
-    return {
-        "server_api_key": key,
-        "key_length": len(key),
-        "key_as_list": list(key)
-    }
