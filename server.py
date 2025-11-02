@@ -234,4 +234,9 @@ def healthz(): return {"ok": True, "ts": datetime.datetime.utcnow().isoformat()}
 @app.get("/debug-key")
 def debug_key():
     """Temporarily expose the server-side API_KEY to debug deployment issues."""
-    return {"server_api_key": API_KEY}
+    key = API_KEY or ""
+    return {
+        "server_api_key": key,
+        "key_length": len(key),
+        "key_as_list": list(key)
+    }
